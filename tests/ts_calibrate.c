@@ -12,12 +12,13 @@
  */
 #include "config.h"
 
+#include <utils/Log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/time.h>
@@ -26,6 +27,7 @@
 #include <linux/fb.h>
 
 #include "tslib.h"
+#include <jni.h>
 
 #include "fbutils.h"
 #include "testutils.h"

@@ -38,6 +38,9 @@ extern "C" {
   #define TSAPI TSIMPORT
 #endif // TSLIB_INTERNAL
 
+#define NDEBUG 0
+#define LOG_TAG "tslib"
+
 struct tsdev;
 
 struct ts_sample {

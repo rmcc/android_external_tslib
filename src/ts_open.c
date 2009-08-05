@@ -16,7 +16,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <sys/fcntl.h>
+#include <fcntl.h>
 
 #ifdef USE_INPUT_API
 #include <linux/input.h>

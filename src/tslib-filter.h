@@ -15,7 +15,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <tslib.h>
+#include "tslib.h"
 
 struct tslib_module_info;
 struct tsdev;
