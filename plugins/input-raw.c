@@ -78,6 +78,8 @@ static int ts_input_read(struct tslib_module_info *inf,
     struct input_event ev;
     int ret = nr;
     int total = 0;
+    samp->total_events = 0;
+
     LOGV("Input-raw module read");
 
     if (i->sane_fd == 0)
@@ -89,6 +91,8 @@ static int ts_input_read(struct tslib_module_info *inf,
     if (i->using_syn) {
         while (total < nr) {
             ret = read(ts->fd, &ev, sizeof(struct input_event));
+            memcpy(&(samp->ev[samp->total_events++]), &ev, sizeof(struct input_event));
+
             if (ret < (int)sizeof(struct input_event)) {
                 total = -1;
                 break;

@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
-
 #include "tslib-private.h"
 
 int __ts_load_module(struct tsdev *ts, const char *module, const char *params, int raw)
@@ -35,10 +34,8 @@ int __ts_load_module(struct tsdev *ts, const char *module, const char *params, i
     else
         LOGV("tslib: entering ts_load_module \n");
     if( (plugin_directory = getenv("TSLIB_PLUGINDIR")) != NULL ) {
-        //fn = alloca(sizeof(plugin_directory) + strlen(module) + 4);
         strcpy(fn,plugin_directory);
     } else {
-        //fn = alloca(sizeof(PLUGIN_DIR) + strlen(module) + 4);
         strcpy(fn, PLUGIN_DIR);
     }
 
@@ -46,9 +43,7 @@ int __ts_load_module(struct tsdev *ts, const char *module, const char *params, i
     strcat(fn, module);
     strcat(fn, ".so");
 
-#ifdef DEBUG
-    printf ("Loading module %s\n", fn);
-#endif
+    LOGV("Loading module %s\n", fn);
     handle = dlopen(fn, RTLD_NOW);
     if (!handle)
         return -1;

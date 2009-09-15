@@ -107,7 +107,7 @@ static void average (struct tslib_dejitter *djt, struct ts_sample *samp)
 static int dejitter_read(struct tslib_module_info *info, struct ts_sample \
                         *samp, int nr)
 {
-        struct tslib_dejitter *djt = (struct tslib_dejitter *)info;
+    struct tslib_dejitter *djt = (struct tslib_dejitter *)info;
     struct ts_sample *s;
     int count = 0, ret;
 
@@ -122,10 +122,10 @@ static int dejitter_read(struct tslib_module_info *info, struct ts_sample \
              */
             djt->nr = 0;
             samp [count++] = *s;
-                        continue;
+            continue;
         }
 
-                /* If the pen moves too fast, reset the backlog. */
+        /* If the pen moves too fast, reset the backlog. */
         if (djt->nr) {
             int prev = (djt->head - 1) & (NR_SAMPHISTLEN - 1);
             if (sqr (s->x - djt->hist [prev].x) +
@@ -133,7 +133,7 @@ static int dejitter_read(struct tslib_module_info *info, struct ts_sample \
 #ifdef DEBUG
                 fprintf (stderr, "DEJITTER: pen movement exceeds threshold\n");
 #endif
-                                djt->nr = 0;
+                djt->nr = 0;
             }
         }
 
@@ -217,7 +217,7 @@ TSAPI struct tslib_module_info *mod_init(struct tsdev *dev, \
     djt->module.ops = &dejitter_ops;
 
     djt->delta = 100;
-        djt->head = 0;
+    djt->head = 0;
 
     if (tslib_parse_vars(&djt->module, dejitter_vars, NR_VARS, params)) {
         free(djt);

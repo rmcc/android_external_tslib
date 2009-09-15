@@ -21,16 +21,6 @@
 #endif
 #include <utils/Log.h>
 
-/* This array is used to prevent segfaults and memory overwrites
- * that can occur if multiple events are returned from ts_read_raw
- * for each event returned by ts_read
- */
-/* We found this was not needed, and have gone back to the
- * original implementation
- */
-
-// static struct ts_sample ts_read_private_samples[1024];
-
 int ts_read(struct tsdev *ts, struct ts_sample *samp, int nr)
 {
     int result;

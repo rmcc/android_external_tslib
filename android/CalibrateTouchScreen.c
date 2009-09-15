@@ -1,16 +1,41 @@
-#include <jni.h>
 #include "tslib.h"
 #include <utils/Log.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <linux/input.h>
+#include <sys/stat.h>
 
 typedef struct {
     int x[5], xfb[5];
     int y[5], yfb[5];
-    int a[7];
 } calibration;
 
-int perform_calibration(calibration *cal) {
+#define ABS_X 0x00
+#define ABS_Y 0x01
+
+static struct input_absinfo info_X, info_Y;
+
+int getMaxMinValues(int ts_fd)
+{
+    int dev_info_fd;
+    char dev_info_buffer[50];
+    if(ioctl(ts_fd, EVIOCGABS(ABS_X), &info_X)) {
+        LOGE("Error reading absolute controller %d for fd %d\n",
+             ABS_X, ts_fd);
+        return -1;
+    }
+
+    if(ioctl(ts_fd, EVIOCGABS(ABS_Y), &info_Y)) {
+        LOGE("Error reading absolute controller %d for fd %d\n",
+             ABS_Y, ts_fd);
+        return -1;
+    }
+
+    return 0;
+}
+
+
+int perform_calibration(calibration *cal, int *arr) {
     int j;
     float n, x, y, x2, y2, xy, z, zx, zy;
     float det, a, b, c, e, f, i;
@@ -30,7 +55,7 @@ int perform_calibration(calibration *cal) {
 // Get determinant of matrix -- check if determinant is too small
     det = n*(x2*y2 - xy*xy) + x*(xy*y - x*y2) + y*(x*xy - y*x2);
     if(det < 0.1 && det > -0.1) {
-        printf("ts_calibrate: determinant is too small -- %f\n",det);
+        LOGE("ts_calibrate: determinant is too small -- %f\n",det);
         return 0;
     }
 
@@ -51,12 +76,9 @@ int perform_calibration(calibration *cal) {
     }
 
 // Now multiply out to get the calibration for framebuffer x coord
-    cal->a[0] = (int)((a*z + b*zx + c*zy)*(scaling));
-    cal->a[1] = (int)((b*z + e*zx + f*zy)*(scaling));
-    cal->a[2] = (int)((c*z + f*zx + i*zy)*(scaling));
-
-    printf("%f %f %f\n",(a*z + b*zx + c*zy),
-    (b*z + e*zx + f*zy),(c*z + f*zx + i*zy));
+    arr[2] = (int)((a*z + b*zx + c*zy)*(scaling));
+    arr[0] = (int)((b*z + e*zx + f*zy)*(scaling));
+    arr[1] = (int)((c*z + f*zx + i*zy)*(scaling));
 
 // Get sums for y calibration
     z = zx = zy = 0;
@@ -67,81 +89,100 @@ int perform_calibration(calibration *cal) {
     }
 
 // Now multiply out to get the calibration for framebuffer y coord
-    cal->a[3] = (int)((a*z + b*zx + c*zy)*(scaling));
-    cal->a[4] = (int)((b*z + e*zx + f*zy)*(scaling));
-    cal->a[5] = (int)((c*z + f*zx + i*zy)*(scaling));
-
-    printf("%f %f %f\n",(a*z + b*zx + c*zy),
-    (b*z + e*zx + f*zy),(c*z + f*zx + i*zy));
+    arr[5] = (int)((a*z + b*zx + c*zy)*(scaling));
+    arr[3] = (int)((b*z + e*zx + f*zy)*(scaling));
+    arr[4] = (int)((c*z + f*zx + i*zy)*(scaling));
 
 // If we got here, we're OK, so assign scaling to a[6] and return
-    cal->a[6] = (int)scaling;
+    arr[6] = (int)scaling;
     return 1;
 
 }
 
 /*
-    This function uses the Java Native Interface (JNI) to allow a
-    calibration application in Java to communicate and utilize
-    the tslib which is written in c.
+    This function is called from init function of linear plugin
+    and it calculates the calibration values for linear plugin by
+    using values stored in pointercal file.
 */
-JNIEXPORT jint JNICALL \
-Java_touchscreen_test_CalibrationTest_calibrateAndroid \
-(JNIEnv *env, jclass this, jintArray incomingCoords)
+int calibrateAndroid(int *a, int ts_fd)
 {
     //Create the cal file with the coords obtained from java app
     calibration cal;
     char *calfile = NULL;
-    jint i, j;
+    int i, j;
     char cal_buffer[256];
-    int cal_fd;
+    int elements[20];
+    char *defaultcalfile = "/data/data/touchscreen.test/files/pointercal";
+    int height, width;
+    struct stat sbuf;
+    int pcal_fd;
+    char pcalbuf[200];
+    int index;
+    char *tokptr;
 
-    int* elements = (*env)->GetIntArrayElements(env, incomingCoords, 0);
+    if((calfile = getenv("TSLIB_CALIBFILE")) == NULL) calfile = defaultcalfile;
+    if(stat(calfile,&sbuf)==0) {
+        pcal_fd = open(calfile,O_RDONLY);
+        if(pcal_fd < 0){
+            LOGE("open failed for pointercal file");
+            return -1;
+            }
+        read(pcal_fd,pcalbuf,200);
+        elements[0] = atoi(strtok(pcalbuf," "));
+        index=0;
+        tokptr = strtok(NULL," ");
+        while(tokptr != NULL) {
+            index++;
+            elements[index] = atoi(tokptr);
+            tokptr = strtok(NULL," ");
+            }
+        close (pcal_fd);
 
-    LOGV("tslib: JNI fn Java_touchscreen_test_CalibrationTest_calibrateAndroid start\n");
-    //Assigning and filling the calibration struct
-    j = 0;
-    for(i=0; i<((*env)->GetArrayLength(env, incomingCoords))/2; i+=2){
-        cal.x[j] =  elements[i];
-        cal.y[j] =  elements[i+1];
-        cal.xfb[j] = elements[i+10];
-        cal.yfb[j] = elements[i+11];
+        width = elements[18] * 2;
+        height = elements[19] * 2;
 
-        if(0) {
-            LOGI("Value of X[%d]=%d in ts_Calibrate\n", j, cal.x[i/2]);
-            LOGI("Value of Y[%d]=%d in ts_Calibrate\n", j, cal.y[i/2]);
-            LOGI("Value of refX[%d]=%d in ts_Calibrate\n", j, cal.xfb[i/2]);
-            LOGI("Value of refY[%d]=%d in ts_Calibrate\n", j, cal.yfb[i/2]);
+        if(getMaxMinValues(ts_fd) < 0){
+            LOGE("Cannot access max and min values of touch screen from kernel");
+            return -1;
         }
-        j++;
-    }
-    LOGV("tslib: going to call perform_calibration() \n");
-    if (perform_calibration (&cal)) {
-        LOGV("tslib:perform_calibration succeeded\n ");
 
-        printf ("Calibration constants: ");
-        for (i = 0; i < 7; i++) {
-            printf("%d ", cal.a [i]);
+        //Assigning and filling the calibration struct
+        j = 0;
+        for(i=0; i< ((sizeof(elements))/sizeof(int))/2; i+=2){
+
+            elements[i] = (elements[i] * info_X.maximum)/width;
+            elements[i+1] = (elements[i+1] * info_Y.maximum)/height;
+            elements[i + 10] = (elements[i + 10] * info_X.maximum)/width;
+            elements[i+11] = (elements[i+11] * info_Y.maximum)/height;
+
+            cal.x[j] =  elements[i];
+            cal.y[j] =  elements[i+1];
+            cal.xfb[j] = elements[i+10];
+            cal.yfb[j] = elements[i+11];
+
+            if(0) {
+                LOGI("Value of X[%d]=%d in ts_Calibrate\n", j, cal.x[i/2]);
+                LOGI("Value of Y[%d]=%d in ts_Calibrate\n", j, cal.y[i/2]);
+                LOGI("Value of refX[%d]=%d in ts_Calibrate\n", j, cal.xfb[i/2]);
+                LOGI("Value of refY[%d]=%d in ts_Calibrate\n", j, cal.yfb[i/2]);
+            }
+            j++;
         }
-        printf("\n");
 
-        if ((calfile = getenv("TSLIB_CALIBFILE")) != NULL) {
-            cal_fd = open (calfile, O_CREAT | O_RDWR);
+        LOGV("tslib: going to call perform_calibration() \n");
+        if (perform_calibration (&cal, a)) {
+            LOGV("tslib:perform_calibration succeeded\n ");
+
+            LOGV("Calibration constants: ");
+            for (i = 0; i < 7; i++) {
+                LOGV("%d ", a[i]);
+            }
+
         }
         else {
-            LOGV("tslib: Writing to pointer cal in touchscreen.test\n");
-            cal_fd = open ("/data/data/touchscreen.test/files/pointercal", O_CREAT | O_RDWR);
+            LOGE("Calibration failed.\n");
+            i = -1;
         }
-
-        sprintf (cal_buffer,"%d %d %d %d %d %d %d",
-            cal.a[1], cal.a[2], cal.a[0],
-            cal.a[4], cal.a[5], cal.a[3], cal.a[6]);
-        write (cal_fd, cal_buffer, strlen (cal_buffer) + 1);
-        close (cal_fd);
-    }
-    else {
-        printf("Calibration failed.\n");
-        i = -1;
     }
     return i;
 }

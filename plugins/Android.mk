@@ -1,11 +1,5 @@
-#My Own TSLIB Make File
-#There are some variables or MACROS in the configure / Makefile which are needed
-#How do I get those into this mk file?
-
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
-
-#May need to add flags from makefile which are generated from .configure
 
 # -------------------------- Corgi-Raw ---------------------------
 LOCAL_C_INCLUDES := \
@@ -14,7 +8,6 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_SRC_FILES :=  corgi-raw.c
 
-#Seems to be seperate .so files for each
 LOCAL_MODULE := corgi
 LOCAL_PRELINK_MODULE := false
 include $(BUILD_SHARED_LIBRARY)
@@ -55,7 +48,7 @@ LOCAL_C_INCLUDES := \
 	external/tslib/ \
 	external/tslib/src
 
-LOCAL_SRC_FILES := linear.c  ../src/ts_parse_vars.c
+LOCAL_SRC_FILES := linear.c  ../src/ts_parse_vars.c ../android/CalibrateTouchScreen.c
 
 LOCAL_MODULE := linear
 
@@ -85,16 +78,9 @@ LOCAL_C_INCLUDES := \
 	external/tslib/ \
 	external/tslib/src
 
-#LOCAL_SRC_FILES := pthres.c
 LOCAL_SRC_FILES := pthres.c ../src/ts_parse_vars.c
 
 LOCAL_MODULE := pthres
 
-#LOCAL_SHARED_LIBRARIES := libtslib
-
 LOCAL_PRELINK_MODULE := false
 include $(BUILD_SHARED_LIBRARY)
-
-
-#include $(BUILD_STATIC_LIBRARY)
-

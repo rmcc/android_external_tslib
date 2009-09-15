@@ -16,6 +16,7 @@ extern "C" {
 #endif /* __cplusplus */
 #include <stdarg.h>
 #include <sys/time.h>
+#include <linux/input.h>
 
 #ifdef WIN32
   #define TSIMPORT __declspec(dllimport)
@@ -38,6 +39,9 @@ extern "C" {
   #define TSAPI TSIMPORT
 #endif // TSLIB_INTERNAL
 
+//This defines max number of events read in one call to input-raw plugin
+#define MAX_NUMBER_OF_EVENTS 5
+
 #define NDEBUG 0
 #define LOG_TAG "tslib"
 
@@ -48,6 +52,11 @@ struct ts_sample {
 	int		y;
 	unsigned int	pressure;
 	struct timeval	tv;
+    //Total number of raw events read by input-raw plugin
+    int total_events;
+    //The raw events read by input-raw plugin are sttored in this array
+    struct input_event ev[MAX_NUMBER_OF_EVENTS];
+    int tsIndex;
 };
 
 /*

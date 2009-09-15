@@ -22,6 +22,7 @@
 
 #include "tslib.h"
 #include "tslib-filter.h"
+#include "tslib-private.h"
 
 struct tslib_linear {
     struct tslib_module_info module;
@@ -141,36 +142,18 @@ TSAPI struct tslib_module_info *mod_init(struct tsdev *dev, const char *params)
     lin->p_div    = 1;
     lin->swap_xy  = 0;
 
-    /*
-     * Check calibration file
-     */
-    if( (calfile = getenv("TSLIB_CALIBFILE")) == NULL) calfile = defaultcalfile;
-    if(stat(calfile,&sbuf)==0) {
-        pcal_fd = open(calfile,O_RDONLY);
-        read(pcal_fd,pcalbuf,200);
-        lin->a[0] = atoi(strtok(pcalbuf," "));
-        index=1;
-        while(index<7) {
-            tokptr = strtok(NULL," ");
-            if(*tokptr!='\0') {
-                lin->a[index] = atoi(tokptr);
-                index++;
-            }
-        }
-        LOGV("tslib: printing linear calibration constants\n" );
-        for(index=0;index<7;index++){
-            LOGV("tslib:val[%d] = %d \n",index,lin->a[index]);
-        }
-        close(pcal_fd);
+    calibrateAndroid(lin->a, dev->fd);
+    LOGV("tslib: printing linear calibration constants\n" );
+    for(index=0;index<7;index++){
+       LOGV("tslib:val[%d] = %d \n",index,lin->a[index]);
     }
-
 
     /*
      * Parse the parameters.
      */
     LOGV("tslib: Calling parse_vars \n" );
     if (tslib_parse_vars(&lin->module, linear_vars, NR_VARS, params)) {
-         LOGE("tslib:ParseVars() failed \n" );
+        LOGE("tslib:ParseVars() failed \n" );
         free(lin);
         return NULL;
     }
