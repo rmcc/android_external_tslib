@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <sys/stat.h>
+#include <string.h>
 
 typedef struct {
     int x[5], xfb[5];
@@ -120,6 +121,8 @@ int calibrateAndroid(int *a, int ts_fd)
     int index;
     char *tokptr;
 
+    memset(elements, 0, sizeof(elements));
+    memset(pcalbuf, 0, sizeof(pcalbuf));
     if((calfile = getenv("TSLIB_CALIBFILE")) == NULL) calfile = defaultcalfile;
     if(stat(calfile,&sbuf)==0) {
         pcal_fd = open(calfile,O_RDONLY);
@@ -127,11 +130,12 @@ int calibrateAndroid(int *a, int ts_fd)
             LOGE("open failed for pointercal file");
             return -1;
             }
-        read(pcal_fd,pcalbuf,200);
+        if (!read(pcal_fd,pcalbuf,200))
+            return -1;
         elements[0] = atoi(strtok(pcalbuf," "));
         index=0;
         tokptr = strtok(NULL," ");
-        while(tokptr != NULL) {
+        while(tokptr != NULL && index < 20) {
             index++;
             elements[index] = atoi(tokptr);
             tokptr = strtok(NULL," ");
