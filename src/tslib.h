@@ -85,6 +85,11 @@ TSAPI int ts_fd(struct tsdev *);
 TSAPI int ts_load_module(struct tsdev *, const char *mod, const char *params);
 
 /*
+ * Reload calibration data
+ */
+TSAPI int ts_reload(struct tsdev *);
+
+/*
  * Open the touchscreen device.
  */
 TSAPI struct tsdev *ts_open(const char *dev_name, int nonblock);

@@ -89,10 +89,17 @@ static int pthres_fini(struct tslib_module_info *info)
 	return 0;
 }
 
+static int pthres_reload(struct tslib_module_info *info, struct tsdev *ts)
+{
+    return info->next->ops->reload(info->next, ts);
+}
+
+
 static const struct tslib_ops pthres_ops =
 {
 	.read	= pthres_read,
 	.fini	= pthres_fini,
+        .reload = pthres_reload,
 };
 
 static int threshold_vars(struct tslib_module_info *inf, char *str, void *data)

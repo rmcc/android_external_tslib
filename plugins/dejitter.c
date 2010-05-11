@@ -166,10 +166,16 @@ static int dejitter_fini(struct tslib_module_info *info)
     return 0;
 }
 
+static int dejitter_reload(struct tslib_module_info *info, struct tsdev *ts)
+{
+    return info->next->ops->reload(info->next, ts);
+}
+
 static const struct tslib_ops dejitter_ops =
 {
     .read   = dejitter_read,
     .fini   = dejitter_fini,
+    .reload = dejitter_reload,
 };
 
 static int dejitter_limit(struct tslib_module_info *inf, char *str, \

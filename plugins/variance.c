@@ -125,10 +125,16 @@ static int variance_fini(struct tslib_module_info *info)
         return 0;
 }
 
+static int variance_reload(struct tslib_module_info *info, struct tsdev *ts)
+{
+    return info->next->ops->reload(info->next, ts);
+}
+
 static const struct tslib_ops variance_ops =
 {
 	.read	= variance_read,
 	.fini	= variance_fini,
+        .reload = variance_reload,
 };
 
 static int variance_limit(struct tslib_module_info *inf, char *str, void *data)

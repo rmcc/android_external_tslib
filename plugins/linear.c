@@ -86,10 +86,34 @@ static int linear_fini(struct tslib_module_info *info)
     return 0;
 }
 
+static int linear_reload(struct tslib_module_info *info, struct tsdev *ts)
+{
+    struct tslib_linear *lin = (struct tslib_linear *)info;
+
+    LOGE("linear_reload: 0x%02x, 0x%02x", info, ts);
+    // Use default values that leave ts numbers unchanged after transform
+    lin->a[0] = 1;
+    lin->a[1] = 0;
+    lin->a[2] = 0;
+    lin->a[3] = 0;
+    lin->a[4] = 1;
+    lin->a[5] = 0;
+    lin->a[6] = 1;
+    lin->p_offset = 0;
+    lin->p_mult   = 1;
+    lin->p_div    = 1;
+    lin->swap_xy  = 0;
+
+    calibrateAndroid(lin->a, ts->fd);
+
+    return 0;
+}
+
 static const struct tslib_ops linear_ops =
 {
     .read   = linear_read,
     .fini   = linear_fini,
+    .reload = linear_reload,
 };
 
 static int linear_xyswap(struct tslib_module_info *inf, char *str, void *data)
@@ -109,15 +133,7 @@ static const struct tslib_vars linear_vars[] =
 
 TSAPI struct tslib_module_info *mod_init(struct tsdev *dev, const char *params)
 {
-
     struct tslib_linear *lin;
-    struct stat sbuf;
-    int pcal_fd;
-    char pcalbuf[200];
-    int index;
-    char *tokptr;
-    char *calfile=NULL;
-    char *defaultcalfile = "/data/data/touchscreen.test/files/pointercal";
 
     LOGV("tslib: Inside  mod_init of linear");
     lin = malloc(sizeof(struct tslib_linear));
@@ -129,24 +145,7 @@ TSAPI struct tslib_module_info *mod_init(struct tsdev *dev, const char *params)
 
     lin->module.ops = &linear_ops;
 
-// Use default values that leave ts numbers unchanged after transform
-    lin->a[0] = 1;
-    lin->a[1] = 0;
-    lin->a[2] = 0;
-    lin->a[3] = 0;
-    lin->a[4] = 1;
-    lin->a[5] = 0;
-    lin->a[6] = 1;
-    lin->p_offset = 0;
-    lin->p_mult   = 1;
-    lin->p_div    = 1;
-    lin->swap_xy  = 0;
-
-    calibrateAndroid(lin->a, dev->fd);
-    LOGV("tslib: printing linear calibration constants\n" );
-    for(index=0;index<7;index++){
-       LOGV("tslib:val[%d] = %d \n",index,lin->a[index]);
-    }
+    linear_reload(lin, dev);
 
     /*
      * Parse the parameters.

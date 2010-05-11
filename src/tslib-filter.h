@@ -29,6 +29,7 @@ struct tslib_vars {
 struct tslib_ops {
 	int (*read)(struct tslib_module_info *inf, struct ts_sample *samp, int nr);
 	int (*fini)(struct tslib_module_info *inf);
+	int (*reload)(struct tslib_module_info *inf, struct tsdev *);
 };
 
 struct tslib_module_info {

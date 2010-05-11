@@ -10,7 +10,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_SRC_FILES := \
 	ts_attach.c ts_close.c ts_config.c \
-	ts_fd.c ts_load_module.c ts_open.c ts_read.c \
+	ts_fd.c ts_load_module.c ts_open.c ts_read.c ts_reload.c \
 	ts_parse_vars.c ts_read_raw_module.c ts_read_raw.c ts_error.c \
 	../android/CalibrateTouchScreen.c
 
