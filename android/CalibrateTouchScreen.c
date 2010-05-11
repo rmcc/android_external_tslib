@@ -113,7 +113,7 @@ int calibrateAndroid(int *a, int ts_fd)
     int i, j;
     char cal_buffer[256];
     int elements[20];
-    char *defaultcalfile = "/data/data/touchscreen.test/files/pointercal";
+    char *defaultcalfile = "/data/misc/tscal/pointercal";
     int height, width;
     struct stat sbuf;
     int pcal_fd;
