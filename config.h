@@ -176,5 +176,5 @@
 /* #undef size_t */
 
 /* Define the touch screen configuration file and plugin directory. */
-#define TS_CONF "/system/ts.conf"
-#define PLUGIN_DIR "/system/lib/"
+#define TS_CONF "/system/etc/ts.conf"
+#define PLUGIN_DIR "/system/lib/ts/"

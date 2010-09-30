@@ -42,8 +42,10 @@ extern "C" {
 //This defines max number of events read in one call to input-raw plugin
 #define MAX_NUMBER_OF_EVENTS 5
 
-#define NDEBUG 0
+//#define LOG_NDEBUG 0
+#ifndef LOG_TAG
 #define LOG_TAG "tslib"
+#endif
 
 struct tsdev;
 

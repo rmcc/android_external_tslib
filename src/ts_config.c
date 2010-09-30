@@ -39,12 +39,12 @@ int ts_config(struct tsdev *ts)
 
     f = fopen(conffile, "r");
     if (!f) {
-        LOGE(stderr,"tslib: ts_config file read fail\n");
+        LOGE("tslib: ts_config file read fail");
         perror("Couldnt open tslib config file");
         return -1;
     }
 
-    LOGV(stderr,"tslib: ts_config file read succeed\n");
+    LOGV("tslib: ts_config file read succeed");
     buf[BUF_SIZE - 2] = '\0';
     while ((p = fgets(buf, BUF_SIZE, f)) != NULL) {
         char *e;
@@ -76,10 +76,12 @@ int ts_config(struct tsdev *ts)
         /* Search for the option. */
         if (strcasecmp(tok, "module") == 0) {
             module_name = strsep(&p, " \t");
+		LOGD("Trying to load module %s",module_name);
             ret = ts_load_module(ts, module_name, p);
         }
         else if (strcasecmp(tok, "module_raw") == 0) {
             module_name = strsep(&p, " \t");
+		LOGD("Trying to load raw module %s",module_name);
             ret = ts_load_module_raw(ts, module_name, p);
         } else {
             ts_error("%s: Unrecognised option %s:%d:%s\n", conffile, line, tok);
@@ -96,6 +98,7 @@ int ts_config(struct tsdev *ts)
         ret = -1;
     }
 
+    LOGD("ts_config leaving with %d",ret);
     fclose(f);
 
     return ret;

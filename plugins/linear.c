@@ -134,6 +134,13 @@ static const struct tslib_vars linear_vars[] =
 TSAPI struct tslib_module_info *mod_init(struct tsdev *dev, const char *params)
 {
     struct tslib_linear *lin;
+    struct stat sbuf;
+    int pcal_fd;
+    char pcalbuf[200];
+    int index;
+    char *tokptr;
+    char *calfile=NULL;
+    char *defaultcalfile = "/data/misc/tscal/pointercal";
 
     LOGV("tslib: Inside  mod_init of linear");
     lin = malloc(sizeof(struct tslib_linear));

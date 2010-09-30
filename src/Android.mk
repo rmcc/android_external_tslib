@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_CFLAGS += -DDEBUG
+#LOCAL_CFLAGS += -DDEBUG
 
 LOCAL_C_INCLUDES := \
 	external/tslib/ \
@@ -87,4 +87,4 @@ LOCAL_MODULE := tscalib
 
 LOCAL_SHARED_LIBRARIES := libtslib libdl libcutils
 
-$(call add-prebuilt-files, ETC, ../ts.conf)
+$(call add-prebuilt-files, ETC, ts.conf)
